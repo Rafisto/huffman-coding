@@ -1,0 +1,32 @@
+cabal-version:       2.2
+
+name:                huffman
+version:             0.1.0.0
+-- synopsis:
+-- description:
+homepage:            https://github.com/githubuser/huffman#readme
+license:             BSD-3-Clause
+license-file:        LICENSE
+author:              Michal Walus and Rafal Wlodarczyk
+maintainer:          info@rwlodarczyk.pl
+copyright:           2025 Michal Walus and Rafal Wlodarczyk
+category:            Compression
+build-type:          Simple
+extra-source-files:  README.md
+                     CHANGELOG.md
+
+executable huffman
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  other-modules:       Huffman
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+  ghc-options:         -Wall
+                       -Wcompat
+                       -Widentities
+                       -Wincomplete-record-updates
+                       -Wincomplete-uni-patterns
+                       -Wmissing-export-lists
+                       -Wmissing-home-modules
+                       -Wpartial-fields
+                       -Wredundant-constraints

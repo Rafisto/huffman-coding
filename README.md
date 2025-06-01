@@ -11,14 +11,32 @@ Zadany plik input file to dowolny zestaw bajtów. Output tak samo.
 
 ```bash
 # compress
-$ huffman <input-file> -o <output-file>
-Compressed file from <original-size> to <output-size> <20%>
+$ huffman [input-file] -o [output-file]
+Compressed file from [original-size] to [output-size] <20%>
 
 # decompress
-$ huffman <input-file> -d -o <output-file>
+$ huffman [input-file] -d -o [output-file]
 ```
 
 Parameters:
 - positional: input file
 - -o output
 - -d decompress (default compress)
+
+## Build
+
+Możemy wykonać builda przy pomocy stack:
+
+```bash
+stack build
+```
+
+A następnie uruchomić program:
+
+```bash
+stack exec huffman -- [input-file] -o [output-file]
+```
+
+## Testy
+
+Do wymyślenia.
