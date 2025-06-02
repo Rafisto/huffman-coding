@@ -7,6 +7,7 @@
 *.hp
 *.o
 *.prof
+*.txt
 .cabal-sandbox/
 .cabal-sandbox/
 .hpc
