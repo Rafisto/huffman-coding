@@ -31,19 +31,7 @@ module Huffman (encodeHuffman, decodeHuffman) where
     add [] c = [(c, 1)]
     add ((x, y):xs) c
         | x == c = (x, y + 1):xs
-        | otherwise = (x, y):(add xs c)
-
-    insertLQ :: LeafQueue -> Tree Char Int -> LeafQueue
-    insertLQ [] tree = [tree]
-    insertLQ (t:lq) tree
-        | get tree < get t = tree:t:lq
-        | otherwise = t:insertLQ lq tree
-
-    charMapToQueue :: CharMap -> LeafQueue
-    charMapToQueue = charMapToQueueHelp []
-        where
-            charMapToQueueHelp lq [] = lq
-            charMapToQueueHelp lq ((c, i):cn) = charMapToQueueHelp (insertLQ lq $ Leaf c i) cn
+        | otherwise = (x, y):add xs c
 
     mapChars :: String -> CharMap
     mapChars = mapCharsHelp []
@@ -54,10 +42,22 @@ module Huffman (encodeHuffman, decodeHuffman) where
     createLQ :: String -> LeafQueue
     createLQ = charMapToQueue . mapChars
 
+    insertLQ :: LeafQueue -> Tree Char Int -> LeafQueue
+    insertLQ [] tree = [tree]
+    insertLQ (t:lq) tree
+        | get tree < get t = tree:t:lq
+        | otherwise = t:insertLQ lq tree
+
     mergeLQ :: LeafQueue -> Tree Char Int
     mergeLQ [] = error "Cannot merge an empty queue"
     mergeLQ [t] = t
     mergeLQ (t1:t2:ts) = mergeLQ $ insertLQ ts $ Node t1 t2 $ get t1 + get t2
+
+    charMapToQueue :: CharMap -> LeafQueue
+    charMapToQueue = charMapToQueueHelp []
+        where
+            charMapToQueueHelp lq [] = lq
+            charMapToQueueHelp lq ((c, i):cn) = charMapToQueueHelp (insertLQ lq $ Leaf c i) cn
 
     makeCode :: Tree Char Int  -> Map Char String
     makeCode t = makeCodeHelp t ""
