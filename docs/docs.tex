@@ -50,8 +50,7 @@
 \newpage
 
 \section{Introduction}
-
-In 1952 David A. Huffman created an algorithm used for lossless data compression, 
+In 1952 David A. Huffman created an algorithm used for lossless data compression \cite{huffman1952method}, 
 building upon the advancements of Claude Shannon's work on information theory.
 It has been proven to be optimal for a symbol-by-symbol coding with a known 
 input probability distribution. The algorithm assigns variable-length codes to 
@@ -86,6 +85,8 @@ $ huffman [input-file] -d -o [output-file]
 \end{itemize}
 
 \section{Huffman Coding Algorithm}
+
+As described in \cite{wikipedia_huffman}, Huffman coding is a...
 
 \begin{figure}[H]
     \centering
@@ -200,17 +201,59 @@ The project uses Stack as a build tool, which allows for simple dependency manag
 $ stack build
 \end{lstlisting}
 
-Afterwards the executable can be run with the following command, or can be copied to any of the PATH directories for easier access.
+Afterwards the executable can be run with the following command:
 
 \begin{lstlisting}[language=bash]
 $ stack exec huffman -- [input-file] -o [output-file]
 \end{lstlisting}
 
+To make it available globally, we can copy the executable to a directory in our PATH.
+
+\begin{lstlisting}[language=bash]
+$ export PATH=$PATH:/<stack-path>/bin
+$ huffman
+Usage: huffman <input-file> [-d] -o <output-file>
+$ huffman src/Main.hs -o Main.hs.huff
+src/Main.hs (1887 bytes) -> Main.hs.huff (1411 bytes) [74.77%]
+\end{lstlisting}
+
 \section{Showcase}
 
-\section{Conclusion}
+\begin{lstlisting}[language=bash]
+$ wget https://pl.wikipedia.org/wiki/Polska -O polska.txt
 
-\section{References}
+$ sha256sum polska.txt
+645e668ee...9c530  polska.txt
 
+$ stack run -- polska.txt -o polska.txt.huff
+polska.txt (1271161 bytes) -> polska.txt.huff (887871 bytes) [69.85%]
+
+$ ls -lah polska.txt polska.txt.huff
+-rw-r--r-- 1 rafisto rafisto 1.3M Jun  9 14:14 polska.txt
+-rw-r--r-- 1 rafisto rafisto 868K Jun  9 23:27 polska.txt.huff
+
+$ stack run -- polska.txt.huff -d -o polska.out.txt
+polska.txt.huff (887871 bytes) -> polska.out.txt (1271161 bytes) [143.17%]
+
+$ sha256sum polska.out.txt 
+645e668ee...9c530  polska.out.txt
+\end{lstlisting}
+
+\section{Conclusions}
+
+The Huffman coding algorithm with its presented implementation in Haskell has shown to be an effective way to compress text files.
+We can assume a compression ratio of around 70\% for large text files, with the decompression process being lossless and efficient.
+
+\section{Future Work}
+
+The current implementation can be extended in several ways:
+\begin{itemize}
+    \item Support for more complex data types, such as images or binary files.
+    \item Optimization of the priority queue, library \textbf{containers} provides a more efficient implementation.
+    \item Implementation of dynamic Huffman coding to adapt to changing input distributions.
+\end{itemize}
+
+\bibliographystyle{plain}
+\bibliography{docs.bib}
 
 \end{document}
