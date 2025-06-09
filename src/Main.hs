@@ -3,6 +3,8 @@ module Main (main) where
 import System.Environment (getArgs)
 import System.Exit (die)
 
+import qualified Data.ByteString.Char8 as BS
+
 import Huffman (decodeHuffman, encodeHuffman)
 
 type CommandLineArgs = (FilePath, FilePath, Bool)
@@ -13,9 +15,12 @@ main = do
     case parseArgs args of
         Left err -> die err
         Right (inputFile, outputFile, decode) -> do
-            input <- readFile inputFile
-            let output = if decode then decodeHuffman input else encodeHuffman input
-            writeFile outputFile output
+            input <- BS.readFile inputFile
+            let output =
+                    if decode
+                        then BS.pack $ decodeHuffman (BS.unpack input)
+                        else encodeHuffman (BS.unpack input)
+            BS.writeFile outputFile output
             putStrLn $ "Operation completed. Output written to " ++ outputFile
 
 parseArgs :: [String] -> Either String CommandLineArgs

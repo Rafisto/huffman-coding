@@ -1,6 +1,13 @@
 module Huffman (encodeHuffman, decodeHuffman) where
     import Prelude
-    import Data.Map (Map, fromList, (!), singleton, union)
+    import qualified Data.ByteString as BS
+    import qualified Data.ByteString.Internal as BSI
+    import Data.Map (Map, (!), singleton, union)
+    import Data.Bits (shiftL, (.|.))
+    import Foreign.ForeignPtr (withForeignPtr)
+    import Foreign.Ptr (plusPtr)
+    import Foreign.Storable (poke)
+    import Data.Word (Word8)
 
     type CharMap = [(Char, Int)]
     type LeafQueue = [Tree Char Int]
@@ -65,11 +72,44 @@ module Huffman (encodeHuffman, decodeHuffman) where
     stringToCode :: String -> Map Char String
     stringToCode = makeCode . mergeLQ . createLQ
 
-    encodeHuffman :: String -> String
-    encodeHuffman s = encodeHuffmanHelp (stringToCode s) s
-        where 
-            encodeHuffmanHelp code "" = ""
-            encodeHuffmanHelp code (x:xs) = (code ! x) ++ encodeHuffmanHelp code xs 
+    serializeCode :: Map Char String -> String
+    serializeCode = show
+
+    deserializeCode :: String -> Map Char String
+    deserializeCode = read
+
+    packBits :: String -> BS.ByteString
+    packBits bits = BSI.unsafeCreate byteLen $ \ptr ->
+        writeBits ptr (chunk8 bits)
+        where
+            len = length bits
+            byteLen = (len + 7) `div` 8
+
+            chunk8 :: String -> [String]
+            chunk8 [] = []
+            chunk8 bs = let (a, b) = splitAt 8 bs in a : chunk8 b
+
+            toByte :: String -> Word8
+            toByte = foldl (\acc b -> shiftL acc 1 .|. if b == '1' then 1 else 0) 0
+
+            writeBits _ [] = return ()
+            writeBits ptr (b:bs) = do
+                poke ptr (toByte (padTo8 b))
+                writeBits (ptr `plusPtr` 1) bs
+
+            padTo8 xs = take 8 (xs ++ repeat '0')
+
+    encodeHuffman :: String -> BS.ByteString
+    encodeHuffman s =
+        let code = stringToCode s
+            serialized = serializeCode code             
+            bitString = encodeHuffmanHelp code s
+            combined = serialized ++ "|" ++ bitString
+        in packBits combined
+
+        where
+            encodeHuffmanHelp _ "" = ""
+            encodeHuffmanHelp code (x:xs) = (code ! x) ++ encodeHuffmanHelp code xs
 
     decodeHuffman :: String -> String
     decodeHuffman = id
