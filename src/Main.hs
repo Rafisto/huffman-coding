@@ -2,7 +2,6 @@ module Main (main) where
 
 import System.Environment (getArgs)
 import System.Exit (die)
-
 import qualified Data.ByteString.Char8 as BS
 
 import Huffman (decodeHuffman, encodeHuffman)
@@ -16,12 +15,20 @@ main = do
         Left err -> die err
         Right (inputFile, outputFile, decode) -> do
             input <- BS.readFile inputFile
-            let output =
-                    if decode
-                        then BS.pack $ decodeHuffman (BS.unpack input)
-                        else encodeHuffman (BS.unpack input)
+            let output = if decode
+                    then BS.pack $ decodeHuffman input
+                    else encodeHuffman (BS.unpack input)
             BS.writeFile outputFile output
-            putStrLn $ "Operation completed. Output written to " ++ outputFile
+
+            let inputSize = BS.length input
+                outputSize = BS.length output
+                ratio = if inputSize == 0 
+                        then 0
+                        else (fromIntegral outputSize / fromIntegral inputSize) * 100 :: Double
+
+            putStrLn $ inputFile ++ " (" ++ show inputSize ++ " bytes) -> " 
+                        ++ outputFile ++ " (" ++ show outputSize ++ " bytes) [" 
+                        ++ show ((fromIntegral (round (ratio * 100) :: Int)) / 100) ++ "%]"
 
 parseArgs :: [String] -> Either String CommandLineArgs
 parseArgs args
