@@ -21,20 +21,11 @@ module Huffman (encodeHuffman, decodeHuffman) where
 
     instance (Show a, Show b) => Show (Tree a b) where
         show (Leaf x y)     = "<" ++ show x ++ " " ++ show y ++ ">"
-        show (Node t1 t2 y) = "("++show t1++" + "++show t2++")" 
+        show (Node t1 t2 _) = "("++show t1++" + "++show t2++")"
 
     get :: Tree a b -> b
-    get (Leaf a b) = b
+    get (Leaf _ b) = b
     get (Node _ _ b) = b
-
-    leafKey :: Tree a b -> a 
-    leafKey (Leaf x _) = x
-
-    nodeLeft :: Tree a b -> Tree a b
-    nodeLeft (Node t1 _ _) = t1
-
-    nodeRight :: Tree a b -> Tree a b
-    nodeRight (Node _ t2 _) = t2
 
     add :: CharMap -> Char -> CharMap
     add [] c = [(c, 1)]
@@ -44,18 +35,18 @@ module Huffman (encodeHuffman, decodeHuffman) where
 
     insertLQ :: LeafQueue -> Tree Char Int -> LeafQueue
     insertLQ [] tree = [tree]
-    insertLQ (t:lq) tree 
+    insertLQ (t:lq) tree
         | get tree < get t = tree:t:lq
         | otherwise = t:insertLQ lq tree
 
     charMapToQueue :: CharMap -> LeafQueue
-    charMapToQueue cm = charMapToQueueHelp [] cm
+    charMapToQueue = charMapToQueueHelp []
         where
             charMapToQueueHelp lq [] = lq
-            charMapToQueueHelp lq ((c, i):cm) = charMapToQueueHelp (insertLQ lq $ Leaf c i) cm
+            charMapToQueueHelp lq ((c, i):cn) = charMapToQueueHelp (insertLQ lq $ Leaf c i) cn
 
     mapChars :: String -> CharMap
-    mapChars s = mapCharsHelp [] s
+    mapChars = mapCharsHelp []
         where
             mapCharsHelp cm [] = cm
             mapCharsHelp cm (x:xs) = mapCharsHelp (add cm x) xs
@@ -64,6 +55,7 @@ module Huffman (encodeHuffman, decodeHuffman) where
     createLQ = charMapToQueue . mapChars
 
     mergeLQ :: LeafQueue -> Tree Char Int
+    mergeLQ [] = error "Cannot merge an empty queue"
     mergeLQ [t] = t
     mergeLQ (t1:t2:ts) = mergeLQ $ insertLQ ts $ Node t1 t2 $ get t1 + get t2
 
@@ -71,7 +63,7 @@ module Huffman (encodeHuffman, decodeHuffman) where
     makeCode t = makeCodeHelp t ""
         where
             makeCodeHelp (Leaf x _) s = singleton x s
-            makeCodeHelp (Node t1 t2 _) s = union (makeCodeHelp t1 (s ++ "0")) (makeCodeHelp t2 (s ++ "1")) 
+            makeCodeHelp (Node t1 t2 _) s = union (makeCodeHelp t1 (s ++ "0")) (makeCodeHelp t2 (s ++ "1"))
 
     stringToCode :: String -> Map Char String
     stringToCode = makeCode . mergeLQ . createLQ
@@ -105,11 +97,6 @@ module Huffman (encodeHuffman, decodeHuffman) where
                 let bits = take (fromIntegral len) (unpackBits bytes)
                 return (toEnum (fromIntegral c), bits)
 
-    stringToBS :: String -> BS.ByteString
-    stringToBS = BS.pack . map (fromIntegral . fromEnum)
-
-    bsToString :: BS.ByteString -> String
-    bsToString = map (toEnum . fromIntegral) . BS.unpack
 
     packBits :: String -> BS.ByteString
     packBits bits = BSI.unsafeCreate byteLen $ \ptr ->
@@ -173,6 +160,5 @@ module Huffman (encodeHuffman, decodeHuffman) where
                         case Map.lookup acc m of
                             Just c -> c : go xs ""
                             Nothing -> case xs of
-                                [] -> []
-                                (b:bs) -> go bs (acc ++ [b])
+                                (b:bss) -> go bss (acc ++ [b])
 

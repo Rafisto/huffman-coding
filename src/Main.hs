@@ -28,7 +28,7 @@ main = do
 
             putStrLn $ inputFile ++ " (" ++ show inputSize ++ " bytes) -> " 
                         ++ outputFile ++ " (" ++ show outputSize ++ " bytes) [" 
-                        ++ show ((fromIntegral (round (ratio * 100) :: Int)) / 100) ++ "%]"
+                        ++ show ((fromIntegral (round (ratio * 100) :: Int) :: Double) / 100) ++ "%]"
 
 parseArgs :: [String] -> Either String CommandLineArgs
 parseArgs args
