@@ -4,6 +4,7 @@
 \usepackage{listings}
 \usepackage{xcolor}
 \usepackage{hyperref}
+
 \usepackage{graphicx}
 \usepackage{float}
 
@@ -37,7 +38,6 @@
   captionpos=b
 }
 
-
 \begin{document}
 
 \title{Huffman Coding in Haskell}
@@ -51,26 +51,30 @@
 
 \section{Introduction}
 In 1952 David A. Huffman created an algorithm used for lossless data compression \cite{huffman1952method}, 
-building upon the advancements of Claude Shannon's work on information theory.
-It has been proven to be optimal for a symbol-by-symbol coding with a known 
-input probability distribution. The algorithm assigns variable-length codes to 
-input characters, the shorter codes being assigned to more frequently occuring characters.
+building upon the advances of Claude Shannon's work on information theory.
+It has been proven to be optimal for symbol-by-symbol coding with a known
+input probability distribution. The algorithm assigns variable-length codes to input characters, and the shorter codes are assigned to more frequently occurring characters.
 
 \section{Initial Requirements}
 
-The program has been designed to fulfill the following requirements:
+The program has been designed to fulfill the following requirements:\\
 
 Write a program that uses Huffman coding (classic or dynamic) to compress files.
 This project will allow you to practice working with binary data and using tree-like data structures.
-To handle binary data, you can use the “bytestring” package.
+To handle binary data, you can use the \textit{bytestring} package.\\
 
-We decided that our take on the implementation will provide a simple command line interface.
+\noindent
+We decided that our take on the implementation will provide a simple command-line interface.
+
+\subsection{Compression}
 
 \paragraph{Compress:} Compresses the input file using Huffman encoding.
 \begin{lstlisting}[language=bash]
 $ huffman [input-file] -o [output-file]
 \end{lstlisting}
 Outputs the compression ratio and sizes.
+
+\subsection{Decompression}
 
 \paragraph{Decompress:} Decompresses the input file.
 \begin{lstlisting}[language=bash]
@@ -86,7 +90,19 @@ $ huffman [input-file] -d -o [output-file]
 
 \section{Huffman Coding Algorithm}
 
-As described in \cite{wikipedia_huffman}, Huffman coding is a...
+As described in \cite{wikihuffman}, can be summarized in the following steps:
+
+\begin{enumerate}
+    \item Count the frequency of each symbol in the input data.
+    \item Create a leaf node for each symbol and add it to the priority queue.
+    \item While there is more than one node in the queue:
+        \begin{enumerate}
+            \item Remove the two nodes of highest priority (lowest probability) from the queue.
+            \item Create a new internal node with these two nodes as children and with probability equal to the sum of the two nodes' probabilities.
+            \item Add the new node to the queue.
+        \end{enumerate}
+    \item The remaining node is the root node, and the tree is complete.
+\end{enumerate}
 
 \begin{figure}[H]
     \centering
@@ -104,14 +120,14 @@ A set of codes $\{C_1, C_2, \ldots, C_n\}$ is a prefix code if:
 
 \noindent
 In any stream of bits, defined as $S = b_1 b_2 \ldots b_m, b\in\{0,1\}$, 
-a prefix code can be decoded unambiguously. This feature is crucial for 
-the Huffman coding algorithm, as it allows for deterministical decoding
+a prefix code can be decoded unambiguously. This feature is crucial for
+the Huffman coding algorithm as it allows deterministic decoding
 of the compressed data in linear time.
 
 \subsection{Frequency Map}
 
-A frequency map assigns each character in the input data the number of its occurences.
-For example it can be easily constructed from a \textbf{String} intrinsic.
+A frequency map assigns to each character in the input data the number of its occurrences.
+For example, it can be easily constructed from a \textbf{String} intrinsic.
 
 \begin{lstlisting}[language=Haskell, caption={Constructing a frequency map from a string.}]
 type CharMap = [(Char, Int)]
@@ -132,8 +148,7 @@ mapChars = mapCharsHelp []
 \subsection{Priority Queue}
 
 In order to build the Huffman tree in linear time, we must preserve the order of
-the characters based on their number of occurences. A priority queue is a data structure
-which allows for efficient insertion and extraction of the minimum element.
+the characters based on their number of occurrences. A priority queue is a data structure that allows for efficient insertion and extraction of the minimum element.
 
 \begin{lstlisting}[language=Haskell, caption={Priority queue implementation using a binary tree.}]
 type LeafQueue = [Tree Char Int]
@@ -166,7 +181,7 @@ each time extracting the two least frequent characters and merging them into a n
 
 \begin{lstlisting}[language=Haskell, caption={Huffman tree construction.}]
 data Tree a b = Leaf a b | Node (Tree a b) (Tree a b) b
-    deriving (Eq)
+    deriving (Eq)3_semester_2024
     makeCode :: Tree Char Int  -> Map Char String
     makeCode t = makeCodeHelp t ""
         where
@@ -195,22 +210,28 @@ The main function uses the IO monad to read the input file, perform processing a
 
 \section{CI}
 
+\subsection{Build}
+
 The project uses Stack as a build tool, which allows for simple dependency management and building.
 
 \begin{lstlisting}[language=bash]
 $ stack build
 \end{lstlisting}
 
-Afterwards the executable can be run with the following command:
+\subsection{Exec}
+
+Afterwards, the executable can be run with the following command:
 
 \begin{lstlisting}[language=bash]
 $ stack exec huffman -- [input-file] -o [output-file]
 \end{lstlisting}
 
-To make it available globally, we can copy the executable to a directory in our PATH.
+\subsection{Bin}
+
+To make it available globally, we can use \texttt{stack install}. 
 
 \begin{lstlisting}[language=bash]
-$ export PATH=$PATH:/<stack-path>/bin
+$ stack install
 $ huffman
 Usage: huffman <input-file> [-d] -o <output-file>
 $ huffman src/Main.hs -o Main.hs.huff
@@ -246,14 +267,14 @@ We can assume a compression ratio of around 70\% for large text files, with the 
 
 \section{Future Work}
 
-The current implementation can be extended in several ways:
+The current implementation can be extended in several ways.
 \begin{itemize}
-    \item Support for more complex data types, such as images or binary files.
     \item Optimization of the priority queue, library \textbf{containers} provides a more efficient implementation.
-    \item Implementation of dynamic Huffman coding to adapt to changing input distributions.
+    \item As proposed by \cite{knuth1985dynamic}, dynamic Huffman coding allows data to be encoded without knowing the frequency distribution beforehand,
+by maintaining a dynamic tree structure that adapts to the input data as it is processed.
 \end{itemize}
 
-\bibliographystyle{plain}
-\bibliography{docs.bib}
+\bibliographystyle{ieeetr}
+\bibliography{docs}
 
 \end{document}
