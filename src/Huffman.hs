@@ -164,7 +164,10 @@ module Huffman (encodeHuffman, decodeHuffman) where
             decodeBits _ "" = ""
             decodeBits m bits = go bits ""
                 where
-                    go [] _ = []
+                    go [] acc =
+                        case Map.lookup acc m of
+                            Just c -> c:""
+                            Nothing -> ""
                     go (b:bss) acc =
                         case Map.lookup acc m of
                             Just c -> c : go (b:bss) ""
