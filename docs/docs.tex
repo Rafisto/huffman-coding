@@ -37,7 +37,6 @@
   captionpos=b
 }
 
-
 \begin{document}
 
 \title{Huffman Coding in Haskell}
@@ -193,7 +192,14 @@ The package \textbf{bytestring} provides an efficient way to handle binary data 
 
 The main function uses the IO monad to read the input file, perform processing and write the output file.
 
+\section{Dynamic Huffman Coding Algorithm}
+
+As proposed by \cite{knuth1985dynamic}, dynamic Huffman coding allows for encoding data without knowing the frequency distribution beforehand,
+by maintaining a dynamic tree structure that adapts to the input data as it is processed.
+
 \section{CI}
+
+\subsection{Build}
 
 The project uses Stack as a build tool, which allows for simple dependency management and building.
 
@@ -201,11 +207,15 @@ The project uses Stack as a build tool, which allows for simple dependency manag
 $ stack build
 \end{lstlisting}
 
+\subsection{Exec}
+
 Afterwards the executable can be run with the following command:
 
 \begin{lstlisting}[language=bash]
 $ stack exec huffman -- [input-file] -o [output-file]
 \end{lstlisting}
+
+\subsection{Bin}
 
 To make it available globally, we can copy the executable to a directory in our PATH.
 
@@ -254,6 +264,6 @@ The current implementation can be extended in several ways:
 \end{itemize}
 
 \bibliographystyle{plain}
-\bibliography{docs.bib}
+\bibliography{./docs.bib}
 
 \end{document}

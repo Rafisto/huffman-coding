@@ -2,7 +2,7 @@ module Main (main) where
 
 import System.Environment (getArgs)
 import System.Exit (die)
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString as BS
 
 import Huffman (decodeHuffman, encodeHuffman)
 
@@ -15,9 +15,10 @@ main = do
         Left err -> die err
         Right (inputFile, outputFile, decode) -> do
             input <- BS.readFile inputFile
-            let output = if decode
-                    then BS.pack $ decodeHuffman input
-                    else encodeHuffman (BS.unpack input)
+            let output =
+                    if decode
+                        then BS.pack $ map (fromIntegral . fromEnum) $ BS.unpack (decodeHuffman input)
+                        else encodeHuffman input
             BS.writeFile outputFile output
 
             let inputSize = BS.length input
@@ -38,7 +39,7 @@ parseArgs args
         case args of
             (inputFile:rest) ->
                 let outputFile = getOutputFile rest
-                    decode = elem "-d" rest
+                    decode = "-d" `elem` rest
                 in case outputFile of
                     Nothing -> Left "Missing output file after -o"
                     Just out -> Right (inputFile, out, decode)
