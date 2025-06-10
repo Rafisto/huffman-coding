@@ -77,7 +77,7 @@ module Huffman (encodeHuffman, decodeHuffman) where
         where
             putEntry :: (Char, String) -> Put
             putEntry (c, bits) = do
-                putWord16be (fromIntegral $ fromEnum c)
+                putWord32be (fromIntegral $ fromEnum c)
                 putWord16be (fromIntegral $ length bits) -- putWord8be
                 putByteString $ packBits bits
 
@@ -92,7 +92,7 @@ module Huffman (encodeHuffman, decodeHuffman) where
 
             getEntry :: Get (Char, String)
             getEntry = do
-                c <- getWord16be
+                c <- getWord32be
                 len <- getWord16be
                 let byteLen = (fromIntegral len + 7) `div` 8
                 bytes <- getByteString byteLen

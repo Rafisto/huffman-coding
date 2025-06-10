@@ -8,7 +8,7 @@ import Control.Monad (when)
 import Test.QuickCheck.Monadic (monadicIO, run, assert)
 
 genSafeChar :: Gen Char
-genSafeChar = suchThat arbitrary (\c -> isPrint c && fromEnum c < 128)
+genSafeChar = suchThat arbitrary (\c -> isPrint c)
 
 genSafeString :: Gen String
 genSafeString = listOf genSafeChar 
@@ -24,7 +24,7 @@ prop_encodeDecode (SafeString bs) = monadicIO $ do
   let encoded = Huffman.encodeHuffman bs
       decoded = Huffman.decodeHuffman encoded
   run $ putStrLn $ "Input: " ++ show bs
-  run $ putStrLn $ "Encoded: " ++ show encoded
+  -- run $ putStrLn $ "Encoded: " ++ show encoded
   run $ putStrLn $ "Decoded: " ++ show decoded
   assert (decoded == bs)
 
