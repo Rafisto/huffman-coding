@@ -6,8 +6,8 @@ module Huffman (encodeHuffman, decodeHuffman) where
     import qualified Data.Map as Map
     import Data.Map (Map, (!), singleton, union, toList, fromList)
     import Data.Bits (shiftL, (.|.), testBit)
-    import Data.Binary.Put (Put, runPut, putWord32be, putWord16be, putByteString)
-    import Data.Binary.Get (Get, runGet, getWord32be, getWord16be, getByteString)
+    import Data.Binary.Put (Put, runPut, putWord32be, putWord16be, putWord8, putByteString)
+    import Data.Binary.Get (Get, runGet, getWord32be, getWord16be, getWord8, getByteString)
     import Foreign.ForeignPtr (withForeignPtr)
     import Foreign.Ptr (plusPtr)
     import Foreign.Storable (poke)
@@ -40,7 +40,8 @@ module Huffman (encodeHuffman, decodeHuffman) where
             mapCharsHelp cm (x:xs) = mapCharsHelp (add cm x) xs
 
     createLQ :: String -> LeafQueue
-    createLQ = charMapToQueue . mapChars
+    createLQ "" = error "Input file is empty"
+    createLQ s = charMapToQueue $ mapChars s
 
     insertLQ :: LeafQueue -> Tree Char Int -> LeafQueue
     insertLQ [] tree = [tree]
@@ -60,6 +61,7 @@ module Huffman (encodeHuffman, decodeHuffman) where
             charMapToQueueHelp lq ((c, i):cn) = charMapToQueueHelp (insertLQ lq $ Leaf c i) cn
 
     makeCode :: Tree Char Int  -> Map Char String
+    makeCode (Leaf x _) = singleton x "1"
     makeCode t = makeCodeHelp t ""
         where
             makeCodeHelp (Leaf x _) s = singleton x s
@@ -76,7 +78,7 @@ module Huffman (encodeHuffman, decodeHuffman) where
             putEntry :: (Char, String) -> Put
             putEntry (c, bits) = do
                 putWord16be (fromIntegral $ fromEnum c)
-                putWord16be (fromIntegral $ length bits)
+                putWord16be (fromIntegral $ length bits) -- putWord8be
                 putByteString $ packBits bits
 
     deserializeCode :: BS.ByteString -> Map Char String
@@ -106,7 +108,8 @@ module Huffman (encodeHuffman, decodeHuffman) where
             byteLen = (len + 7) `div` 8
 
             chunk8 [] = []
-            chunk8 bs = let (a, b) = splitAt 8 bs in a : chunk8 b
+            chunk8 bs = a:chunk8 b
+                where (a, b) = splitAt 8 bs 
 
             toByte = foldl (\acc b -> shiftL acc 1 .|. if b == '1' then 1 else 0) 0
 
@@ -120,10 +123,12 @@ module Huffman (encodeHuffman, decodeHuffman) where
     unpackBits :: BS.ByteString -> String
     unpackBits bs = concatMap byteToBits (BS.unpack bs)
         where
-        byteToBits w = reverse $ take 8 $ reverse (go 7 w)
+        byteToBits w = (go 7 w) -- reverse $ take 8 $ reverse
             where
                 go (-1) _ = []
-                go i x = let bit = if testBit x i then '1' else '0' in bit : go (i - 1) x
+                go i x = 
+                    let bit = if testBit x i then '1' else '0' 
+                    in bit : go (i - 1) x
 
 
     encodeHuffman :: String -> BS.ByteString
@@ -133,7 +138,8 @@ module Huffman (encodeHuffman, decodeHuffman) where
             bitString = encodeBits code s
             body = packBits bitString
             headerLen = runPut (putWord32be (fromIntegral $ BS.length header))
-        in BL.toStrict $ headerLen <> BL.fromStrict header <> BL.fromStrict body
+            redundant = runPut $ putWord8 $ fromIntegral $ mod (8 - mod (length bitString) 8) 8
+        in BL.toStrict (redundant <> headerLen) <> header <> body
         where
             encodeBits _ "" = ""
             encodeBits code (x:xs) = (code ! x) ++ encodeBits code xs
@@ -141,12 +147,15 @@ module Huffman (encodeHuffman, decodeHuffman) where
 
     decodeHuffman :: BS.ByteString -> String
     decodeHuffman bs =
-        let (headerLenBS, rest) = BS.splitAt 4 bs
+        let (redundantBS, remaining) = BS.splitAt 1 bs 
+            redundant = fromIntegral $ runGet getWord8 (BL.fromStrict redundantBS)
+            (headerLenBS, rest) = BS.splitAt 4 remaining
             headerLen = runGet getWord32be (BL.fromStrict headerLenBS)
             (headerBS, bodyBS) = BS.splitAt (fromIntegral headerLen) rest
             codeMap = deserializeCode headerBS
             invertedCode = invertMap codeMap
-            bitString = unpackBits bodyBS
+            bitString = take (length x - redundant + 1) x
+                where x = unpackBits bodyBS
         in decodeBits invertedCode bitString
         where
             invertMap :: Map Char String -> Map String Char
@@ -156,9 +165,8 @@ module Huffman (encodeHuffman, decodeHuffman) where
             decodeBits m bits = go bits ""
                 where
                     go [] _ = []
-                    go xs acc =
+                    go (b:bss) acc =
                         case Map.lookup acc m of
-                            Just c -> c : go xs ""
-                            Nothing -> case xs of
-                                (b:bss) -> go bss (acc ++ [b])
+                            Just c -> c : go (b:bss) ""
+                            Nothing -> go bss (acc ++ [b])
 
