@@ -132,44 +132,46 @@ module Huffman (encodeHuffman, decodeHuffman) where
 
 
     encodeHuffman :: String -> BS.ByteString
-    encodeHuffman s =
-        let code = stringToCode s
-            header = serializeCode code
-            bitString = encodeBits code s
-            body = packBits bitString
-            headerLen = runPut (putWord32be (fromIntegral $ BS.length header))
-            redundant = runPut $ putWord8 $ fromIntegral $ mod (8 - mod (length bitString) 8) 8
-        in BL.toStrict (redundant <> headerLen) <> header <> body
-        where
-            encodeBits _ "" = ""
-            encodeBits code (x:xs) = (code ! x) ++ encodeBits code xs
+    encodeHuffman s
+        | s == "" = BS.empty
+        | otherwise =
+            let code = stringToCode s
+                header = serializeCode code
+                bitString = encodeBits code s
+                body = packBits bitString
+                headerLen = runPut (putWord32be (fromIntegral $ BS.length header))
+                redundant = runPut $ putWord8 $ fromIntegral $ mod (8 - mod (length bitString) 8) 8
+            in BL.toStrict (redundant <> headerLen) <> header <> body
+            where
+                encodeBits _ "" = ""
+                encodeBits code (x:xs) = (code ! x) ++ encodeBits code xs
 
 
     decodeHuffman :: BS.ByteString -> String
-    decodeHuffman bs =
-        let (redundantBS, remaining) = BS.splitAt 1 bs 
-            redundant = fromIntegral $ runGet getWord8 (BL.fromStrict redundantBS)
-            (headerLenBS, rest) = BS.splitAt 4 remaining
-            headerLen = runGet getWord32be (BL.fromStrict headerLenBS)
-            (headerBS, bodyBS) = BS.splitAt (fromIntegral headerLen) rest
-            codeMap = deserializeCode headerBS
-            invertedCode = invertMap codeMap
-            bitString = take (length x - redundant + 1) x
-                where x = unpackBits bodyBS
-        in decodeBits invertedCode bitString
-        where
-            invertMap :: Map Char String -> Map String Char
-            invertMap = fromList . map (\(k,v) -> (v,k)) . toList
-
-            decodeBits _ "" = ""
-            decodeBits m bits = go bits ""
-                where
-                    go [] acc =
-                        case Map.lookup acc m of
-                            Just c -> c:""
-                            Nothing -> ""
-                    go (b:bss) acc =
-                        case Map.lookup acc m of
-                            Just c -> c : go (b:bss) ""
-                            Nothing -> go bss (acc ++ [b])
-
+    decodeHuffman bs
+        | bs == BS.empty = ""
+        | otherwise = 
+            let (redundantBS, remaining) = BS.splitAt 1 bs 
+                redundant = fromIntegral $ runGet getWord8 (BL.fromStrict redundantBS)
+                (headerLenBS, rest) = BS.splitAt 4 remaining
+                headerLen = runGet getWord32be (BL.fromStrict headerLenBS)
+                (headerBS, bodyBS) = BS.splitAt (fromIntegral headerLen) rest
+                codeMap = deserializeCode headerBS
+                invertedCode = invertMap codeMap
+                bitString = take (length x - redundant) x
+                    where x = unpackBits bodyBS
+            in decodeBits invertedCode bitString
+            where
+                invertMap :: Map Char String -> Map String Char
+                invertMap = fromList . map (\(k,v) -> (v,k)) . toList
+                decodeBits _ "" = ""
+                decodeBits m bits = go bits ""
+                    where
+                        go [] acc = 
+                            case Map.lookup acc m of
+                                Just c -> c:""
+                                Nothing -> ""
+                        go (b:bss) acc =
+                            case Map.lookup acc m of
+                                Just c -> c : go (b:bss) ""
+                                Nothing -> go bss (acc ++ [b])

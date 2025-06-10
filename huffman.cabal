@@ -2,8 +2,6 @@ cabal-version:       2.2
 
 name:                huffman
 version:             0.1.0.0
--- synopsis:
--- description:
 homepage:            https://github.com/githubuser/huffman#readme
 license:             BSD-3-Clause
 license-file:        LICENSE
@@ -15,15 +13,15 @@ build-type:          Simple
 extra-source-files:  README.md
                      CHANGELOG.md
 
-executable huffman
+library
   hs-source-dirs:      src
-  main-is:             Main.hs
-  other-modules:       Huffman
+  exposed-modules:     Huffman
   default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5,
+  build-depends:       base >=4.7 && <5,
                        binary,
                        bytestring,
                        containers,
+                       heap
   ghc-options:         -Wall
                        -Wcompat
                        -Widentities
@@ -37,3 +35,42 @@ executable huffman
                        -Wno-unused-imports
                        -Wunused-type-patterns
                        -Werror
+
+executable huffman
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  other-modules:       Huffman
+  default-language:    Haskell2010
+  build-depends:       base,
+                       binary,
+                       bytestring,
+                       containers,
+                       heap,
+                       huffman
+  ghc-options:         -Wall
+                       -Wcompat
+                       -Widentities
+                       -Wincomplete-record-updates
+                       -Wincomplete-uni-patterns
+                       -Wmissing-export-lists
+                       -Wmissing-home-modules
+                       -Wpartial-fields
+                       -Wredundant-constraints
+                       -Wmissing-signatures
+                       -Wno-unused-imports
+                       -Wunused-type-patterns
+                       -Werror
+
+test-suite spec
+  type:               exitcode-stdio-1.0
+  hs-source-dirs:     test
+  main-is:            Spec.hs
+  default-language:   Haskell2010
+  build-depends:      base,
+                      QuickCheck,
+                      bytestring,
+                      containers,
+                      heap,
+                      binary,
+                      huffman
+  ghc-options:        -Wall
