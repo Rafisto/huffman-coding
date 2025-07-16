@@ -1,7 +1,7 @@
 # Huffman Coding
 
+[![Built with Haskell](https://img.shields.io/badge/Haskell-5e5086.svg)](https://www.haskell.org/)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
-[![Built with Haskell](https://img.shields.io/badge/Built%20with-Haskell-5e5086.svg)](https://www.haskell.org/)
 [![CI Status](https://github.com/Rafisto/huffman-coding/actions/workflows/haskell.yml/badge.svg)](https://github.com/Rafisto/huffman-coding/actions/workflows/haskell.yml)
 
 Compresses files using Huffman encoding.
