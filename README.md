@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 [![CI Status](https://github.com/Rafisto/huffman-coding/actions/workflows/haskell.yml/badge.svg)](https://github.com/Rafisto/huffman-coding/actions/workflows/haskell.yml)
 
-Compresses files using Huffman encoding.
+Compress files using Huffman coding.
 
 ## Usage
 
@@ -37,11 +37,14 @@ shorter codes are assigned to more frequently occurring characters.
 
 ## Initial Requirements
 
-The program has been designed to fulfill the following requirements:\
-Write a program that uses Huffman coding (classic or dynamic) to
-compress files. This project will allow you to practice working with
-binary data and using tree-like data structures. To handle binary data,
-you can use the *bytestring* package.\
+> [!NOTE]
+> The program has been designed to fulfill the following requirements:
+> 
+> Write a program that uses Huffman coding (classic or dynamic) to
+> compress files. This project will allow you to practice working with
+> binary data and using tree-like data structures. To handle binary data,
+> you can use the *bytestring* package.\
+
 We decided that our take on the implementation will provide a simple
 command-line interface.
 
@@ -86,9 +89,12 @@ steps:
 ## Prefix Codes
 
 A set of codes $\{C_1, C_2, \ldots, C_n\}$ is a prefix code if:
-$$\begin{aligned}
+
+$$
+\begin{aligned}
     \forall i, j \in \{1, 2, \ldots, n\}, i \neq j: C_i \not\subseteq C_j
-\end{aligned}$$
+\end{aligned}
+$$
 
 In any stream of bits, defined as $S = b_1 b_2 \ldots b_m, b\in\{0,1\}$,
 a prefix code can be decoded unambiguously. This feature is crucial for
